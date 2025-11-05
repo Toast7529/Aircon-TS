@@ -1,4 +1,5 @@
 import { GuildMember } from "discord.js";
+import { Readable } from "stream";
 
 export interface Song {
     id?: string;
@@ -9,4 +10,7 @@ export interface Song {
     requestedBy?: GuildMember;
     source?: string;
     thumbnailUrl?: string;
+    isLive?: boolean;
+    uploader?: string;
+    getStream?: () => Promise<Readable>;
 }

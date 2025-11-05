@@ -1,4 +1,4 @@
-import type { Client, GuildMember, TextChannel, VoiceChannel } from "discord.js";
+import type { Client, GuildMember, TextChannel, VoiceBasedChannel } from "discord.js";
 import type { VoiceConnection, AudioPlayer } from "@discordjs/voice";
 import { Song } from "../types/Song";
 
@@ -7,7 +7,7 @@ export class Queue {
     // Core
     public songs: Song[] = [];
     public textChannel: TextChannel;
-    public voiceChannel: VoiceChannel 
+    public voiceChannel: VoiceBasedChannel;
     public client: Client;
 
     // Audio and Voice runtime handlers:
@@ -23,7 +23,7 @@ export class Queue {
     public createdAt: number = Date.now();
     public requester?: GuildMember;
 
-    constructor(client: Client, textChannel: TextChannel, voiceChannel: VoiceChannel, requester?: GuildMember) {
+    constructor(client: Client, textChannel: TextChannel, voiceChannel: VoiceBasedChannel, requester?: GuildMember) {
         this.client = client;
         this.textChannel = textChannel;
         this.voiceChannel = voiceChannel;
@@ -50,7 +50,9 @@ export class Queue {
     }
 
     public clearQueue() {
-        this.songs = [];                    // Might have to destroy songs to prevent memory leaks (length = 0??)
+        while (this.songs.length > 0) { // Clears references
+            this.songs.pop();
+        }
         this.currentIndex = 0;
     }
 

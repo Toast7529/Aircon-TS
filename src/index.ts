@@ -1,17 +1,10 @@
 import 'dotenv/config';
-import {
-    Client,
-    GatewayIntentBits,
-    Collection,
-    Events,
-    EmbedBuilder,
-    Message,
-    TextBasedChannel
-} from 'discord.js';
+import { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, Message, TextBasedChannel } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
 import { config } from './config'
 import { pathToFileURL } from 'url';
+import { Player } from './Player/Player';
 
 // Client Set up:
 const client = new Client({
@@ -34,8 +27,13 @@ declare module 'discord.js' {
     export interface Client {
         commands: Collection<string, Command>;
         aliases: Collection<string, Command>;
+        player: Player;
     }
 }
+
+// Initialize Player
+client.player = new Player(client);
+
 
 // Command Collection:
 client.commands = new Collection<string, Command>();
