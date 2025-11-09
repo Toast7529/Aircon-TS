@@ -1,7 +1,7 @@
 import { Client, Collection, GuildMember, TextChannel, VoiceBasedChannel } from 'discord.js';
 import { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus, entersState, StreamType} from "@discordjs/voice";
 import { Queue } from './Queue';
-import { Song } from '../types/Song';
+import { Song } from './Song';
 import { Readable } from 'stream';
 import { EventEmitter } from 'events';
 
