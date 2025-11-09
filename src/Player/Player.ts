@@ -4,33 +4,44 @@ import { Queue } from './Queue';
 import { Song } from './Song';
 import { Readable } from 'stream';
 import { EventEmitter } from 'events';
+import { BaseExtractor } from './extractors/BaseExtractor';
+
+export interface PlayerOptions {
+    extractors: BaseExtractor[];
+}
 
 export class Player extends EventEmitter {
     private queues: Collection<string, Queue>;
+    private extractors: BaseExtractor[];
     private client: Client;
 
-    constructor(client: Client) {
+    constructor(client: Client, options: PlayerOptions) {
         super();
         this.queues = new Collection();
         this.client = client;
+        this.extractors = options.extractors;
     }
 
     public getQueue(guildId: string): Queue | undefined {
         return this.queues.get(guildId);
     }
 
-    public async addSongToQueue(guildId: string, songs: Song[], textChannel: TextChannel, member: GuildMember): Promise<void> {
+    public async addSongToQueue(guildId: string, query: string, textChannel: TextChannel, member: GuildMember): Promise<void> {
+        const songs = await this.extractSongs(query);
+        if (!songs) throw new Error("No songs could be extracted from the query.");
         let queue = this.queues.get(guildId);
 
         if (!queue) {
             if(!member.voice.channel) throw new Error("Member is not in a voice channel.");
             queue = await this.createQueue(guildId, textChannel, member.voice.channel!, member);
         }
+
         if (songs.length > 1) {
             this.emit('playlistAdded', queue, songs);
         } else {
             this.emit('songAdded', queue, songs[0]);
         }
+        
         for (const song of songs) {
             queue.addSong(song);
 
@@ -98,6 +109,20 @@ export class Player extends EventEmitter {
             queue.connection?.destroy(); 
             console.log("Voice connection destroyed. Queue cleaned up.");
         });
+    }
+
+    private async extractSongs(query: string): Promise<Song[] | null> {
+        for (const extractor of this.extractors) {
+            try {
+                const result = await extractor.extract(query);
+                if (result) {
+                    return result;
+                }
+            } catch (err) {
+                console.error(`Error in extractor ${extractor.name}:`, err);
+            }
+        }
+        return null;
     }
     
     public getCurrentDuration(guildId: string): number {

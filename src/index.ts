@@ -5,6 +5,7 @@ import path from 'path';
 import { config } from './config'
 import { pathToFileURL } from 'url';
 import { Player } from './Player/Player';
+import { MP3Extractor } from "./Player/extractors/MP3Extractor";
 
 // Client Set up:
 const client = new Client({
@@ -32,7 +33,11 @@ declare module 'discord.js' {
 }
 
 // Initialize Player
-client.player = new Player(client);
+client.player = new Player(client, {
+    extractors: [ 
+        new MP3Extractor(),
+    ]
+});
 
 
 // Command Collection:
