@@ -60,6 +60,7 @@ export class Player extends EventEmitter {
         queue.player.on(AudioPlayerStatus.Idle, async () => {
             const nextSong = queue!.skipSong();
             if (nextSong && nextSong.getStream) {
+                this.emit('nextSong', queue, nextSong);
                 await this.play(queue,nextSong);
             } else {
                 this.emit('queueEnd', queue);

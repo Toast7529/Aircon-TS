@@ -92,4 +92,25 @@ client.on(Events.MessageCreate, async (message) => {
     }
 });
 
+// Client Player Events:
+client.player.on('songAdded', (queue, song) => {
+    queue.textChannel.send(`🎵 Added to queue: **${song.title}**`);
+});
+
+client.player.on('playlistAdded', (queue, songs) => {
+    queue.textChannel.send(`🎵 Added playlist with **${songs.length}** songs to the queue!`);
+});
+
+client.player.on('songEnd', (queue, song) => {
+    console.log(`Finished playing: ${song.title}`);
+});
+
+client.player.on('queueEnd', (queue) => {
+    queue.textChannel.send('🏁 Queue has ended!');
+});
+
+client.player.on('nextSong', (queue, song) => {
+    queue.textChannel.send(`▶ Now playing: **[${song.title}](${song.url})**`);
+});
+
 client.login(process.env.TOKEN);
