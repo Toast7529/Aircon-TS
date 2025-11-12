@@ -6,8 +6,9 @@ export default {
         .setName("queue")
         .setDescription("Plays a song!"),
     alias: "q",
-    async execute(client: Client, message: Message & { channel: TextBasedChannel }, args: string[]) {
-        
+    async execute(client: Client, message: Message, args: string[]) {
+        if (!message.channel.isSendable()) return;
+
         message.channel.send("Check console");   
         console.log(client.player.getQueue(message.member!.guild.id)?.songs);
     },

@@ -75,12 +75,12 @@ client.once(Events.ClientReady, () => {
 });
 
 // Message Command Handler:
-client.on(Events.MessageCreate, async (message) => {
+client.on(Events.MessageCreate, async (message: Message) => {
     if (message.author.bot || !message.guild) return;
     if (!message.content.startsWith(config.prefix)) return;
   
-    const args = message.content.trim().split(/\s+/);
-    const commandName = args.shift()!.slice(config.prefix.length).toLowerCase();
+    const args: string[] = message.content.trim().split(/\s+/);
+    const commandName: string = args.shift()!.slice(config.prefix.length).toLowerCase();
   
     const cmd = client.commands.get(commandName) || client.aliases.get(commandName);
     if (!cmd) return;
@@ -88,7 +88,9 @@ client.on(Events.MessageCreate, async (message) => {
     try {
         await cmd.execute(client, message, args);
     } catch (err) {
-        console.error(`❌ Error executing ${commandName}:`, err);
+        console.error(`Error executing ${commandName}:`, err);
+        if (!message.channel.isSendable()) return;
+        
         const errorEmbed = new EmbedBuilder()
             .setTitle('Error!')
             .setDescription('There was an error executing that command.')

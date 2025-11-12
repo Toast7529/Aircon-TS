@@ -7,7 +7,8 @@ export default {
         .setDescription("Plays a song!"),
     alias: "np",
     async execute(client: Client, message: Message & { channel: TextBasedChannel }, args: string[]) {
-        
+        if (!message.channel.isSendable()) return;
+
         message.channel.send("Check console");   
         console.log(client.player.getCurrentDuration(message.member!.guild.id))
         console.log(client.player.getQueue(message.member!.guild.id)?.getCurrentSong());

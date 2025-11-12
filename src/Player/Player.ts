@@ -114,6 +114,7 @@ export class Player extends EventEmitter {
     private async extractSongs(query: string): Promise<Song[] | null> {
         for (const extractor of this.extractors) {
             try {
+                if (!extractor.validate(query)) continue;
                 const result = await extractor.extract(query);
                 if (result) {
                     return result;
@@ -132,6 +133,7 @@ export class Player extends EventEmitter {
         const player = queue.player;
         if (!player) return 0;
 
+        if (player.state.status !== AudioPlayerStatus.Playing) return 0;
         const resource = player.state.resource;
         if (!resource) return 0;
 
