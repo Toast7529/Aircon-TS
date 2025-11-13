@@ -1,4 +1,4 @@
-import { Client, Collection, GuildMember, TextChannel, VoiceBasedChannel } from 'discord.js';
+import { Client, Collection, GuildMember, TextChannel, VoiceBasedChannel, Message } from 'discord.js';
 import { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus, entersState, StreamType} from "@discordjs/voice";
 import { Queue } from './Queue';
 import { Song } from './Song';
@@ -138,5 +138,19 @@ export class Player extends EventEmitter {
         if (!resource) return 0;
 
         return resource.playbackDuration / 1000; // Convert to seconds
+    }
+
+    // Going to start using Message parameters
+    public stop(message: Message): void {
+        const guildId = message.guild!.id;
+        const queue = this.queues.get(guildId);
+        if (!queue) return;
+
+        queue.player?.stop();
+        queue.connection?.destroy();
+        queue.clearQueue();
+        this.queues.delete(guildId);
+
+        console.log("Playback stopped and queue cleared.");
     }
 }
