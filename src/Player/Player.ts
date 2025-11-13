@@ -1,5 +1,5 @@
 import { Client, Collection, GuildMember, TextChannel, VoiceBasedChannel, Message } from 'discord.js';
-import { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus, entersState, StreamType} from "@discordjs/voice";
+import { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus, entersState, StreamType, getVoiceConnection} from "@discordjs/voice";
 import { Queue } from './Queue';
 import { Song } from './Song';
 import { Readable } from 'stream';
@@ -152,5 +152,15 @@ export class Player extends EventEmitter {
         this.queues.delete(guildId);
 
         console.log("Playback stopped and queue cleared.");
+    }
+
+    public isUserInSameVoiceChannel(message: Message): boolean {
+        const userChannel = message.member?.voice.channel;
+        if (!userChannel) return false;
+
+        const connection = getVoiceConnection(message.guild!.id);
+        if (!connection) return true;   // Ideally we want to make a connection if none exists
+        
+        return connection.joinConfig.channelId === userChannel.id;
     }
 }
