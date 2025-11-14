@@ -171,4 +171,24 @@ export class Player extends EventEmitter {
         queue.player?.stop();
     }
 
+    public pause(message: Message): boolean {
+        const guildId = message.guild!.id;
+        const queue = this.queues.get(guildId);
+        if (!queue) return false;
+
+        if (queue.player?.state.status !== AudioPlayerStatus.Playing) return false;
+        queue.player?.pause();
+        return true;
+    }
+
+    public resume(message: Message): boolean {
+        const guildId = message.guild!.id;
+        const queue = this.queues.get(guildId);
+        if (!queue) return false;
+
+        if (queue.player?.state.status !== AudioPlayerStatus.Paused) return false;
+        queue.player?.unpause();
+        return true;
+    }
+
 }
