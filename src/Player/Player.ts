@@ -154,10 +154,8 @@ export class Player extends EventEmitter {
         const guildId = message.guild!.id;
         const queue = this.queues.get(guildId);
         if (!queue) return;
-
-        queue.player?.stop();
-        queue.connection?.destroy();
-        queue.clearQueue();
+        
+        queue.destroyQueue();
         this.queues.delete(guildId);
 
         console.log("Playback stopped and queue cleared.");
