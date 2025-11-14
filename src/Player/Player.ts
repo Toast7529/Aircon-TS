@@ -154,7 +154,7 @@ export class Player extends EventEmitter {
         const guildId = message.guild!.id;
         const queue = this.queues.get(guildId);
         if (!queue) return;
-        
+
         queue.destroyQueue();
         this.queues.delete(guildId);
 
@@ -189,4 +189,11 @@ export class Player extends EventEmitter {
         return true;
     }
 
+    public clear(message: Message): void {
+        const guildId = message.guild!.id;
+        const queue = this.queues.get(guildId);
+        if (!queue) return;
+
+        queue.clearQueue();
+    }
 }

@@ -56,8 +56,8 @@ export class Queue {
     }
 
     public clearQueue() {
-        while (this.songs.length > 0) { // Clears references
-            this.songs.pop();
+        if (this.songs.length > 1) {
+            this.songs = [ this.songs[this.currentIndex] ];
         }
         this.currentIndex = 0;
     }
