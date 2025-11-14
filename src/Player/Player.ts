@@ -125,6 +125,16 @@ export class Player extends EventEmitter {
         }
         return null;
     }
+
+    public isUserInSameVoiceChannel(message: Message): boolean {
+        const userChannel = message.member?.voice.channel;
+        if (!userChannel) return false;
+
+        const connection = getVoiceConnection(message.guild!.id);
+        if (!connection) return true;   // Ideally we want to make a connection if none exists
+
+        return connection.joinConfig.channelId === userChannel.id;
+    }
     
     public getCurrentDuration(guildId: string): number {
         const queue = this.queues.get(guildId);
@@ -140,7 +150,6 @@ export class Player extends EventEmitter {
         return resource.playbackDuration / 1000; // Convert to seconds
     }
 
-    // Going to start using Message parameters
     public stop(message: Message): void {
         const guildId = message.guild!.id;
         const queue = this.queues.get(guildId);
@@ -162,14 +171,4 @@ export class Player extends EventEmitter {
         queue.player?.stop();
     }
 
-
-    public isUserInSameVoiceChannel(message: Message): boolean {
-        const userChannel = message.member?.voice.channel;
-        if (!userChannel) return false;
-
-        const connection = getVoiceConnection(message.guild!.id);
-        if (!connection) return true;   // Ideally we want to make a connection if none exists
-
-        return connection.joinConfig.channelId === userChannel.id;
-    }
 }
