@@ -154,13 +154,22 @@ export class Player extends EventEmitter {
         console.log("Playback stopped and queue cleared.");
     }
 
+    public skip(message: Message): void {
+        const guildId = message.guild!.id;
+        const queue = this.queues.get(guildId);
+        if (!queue) return;
+
+        queue.player?.stop();
+    }
+
+
     public isUserInSameVoiceChannel(message: Message): boolean {
         const userChannel = message.member?.voice.channel;
         if (!userChannel) return false;
 
         const connection = getVoiceConnection(message.guild!.id);
         if (!connection) return true;   // Ideally we want to make a connection if none exists
-        
+
         return connection.joinConfig.channelId === userChannel.id;
     }
 }
