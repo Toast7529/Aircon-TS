@@ -69,7 +69,13 @@ export class Player extends EventEmitter {
 
         // Handle when a song ends:
         queue.player.on(AudioPlayerStatus.Idle, async () => {
-            const nextSong = queue!.skipSong();
+            if(queue.preventAdvance) {
+                queue.preventAdvance = false;
+            } else {
+                queue.advanceCurrentIndex();
+            }
+
+            const nextSong = queue.getCurrentSong();
             if (nextSong && nextSong.getStream) {
                 this.emit('nextSong', queue, nextSong);
                 await this.play(queue,nextSong);
@@ -167,6 +173,17 @@ export class Player extends EventEmitter {
         if (!queue) return;
 
         queue.player?.stop();
+    }
+
+    public previous(message: Message): boolean {
+        const guildId = message.guild!.id;
+        const queue = this.queues.get(guildId);
+        if (!queue) return false;
+
+        const previousSong = queue.previousSong();
+        if (!previousSong) return false;
+        queue.player?.stop();
+        return true;
     }
 
     public pause(message: Message): boolean {

@@ -9,6 +9,7 @@ export class Queue {
     public textChannel: TextChannel;
     public voiceChannel: VoiceBasedChannel;
     public client: Client;
+    public preventAdvance: boolean = false;
 
     // Audio and Voice runtime handlers:
     public connection?: VoiceConnection;
@@ -41,6 +42,10 @@ export class Queue {
         return this.songs[this.currentIndex];
     }
 
+    public advanceCurrentIndex() {
+        if (this.currentIndex + 1 < this.songs.length) this.currentIndex++;
+    }
+
     // Skip to the next song
     public skipSong(): Song | undefined {
         if (this.currentIndex + 1 < this.songs.length) {
@@ -49,12 +54,21 @@ export class Queue {
         }
     }
 
+    public previousSong(): boolean {
+        if (this.currentIndex == 0) return false;
+        this.currentIndex--;
+        this.preventAdvance = true;
+        return true;
+    }
+
+    // Clear and destroy the queue
     public destroyQueue() {
         this.songs = [];
         this.currentIndex = 0;
         this.player?.stop(true);
     }
 
+    // Clear all songs except the current one
     public clearQueue() {
         if (this.songs.length > 1) {
             this.songs = [ this.songs[this.currentIndex] ];
@@ -62,6 +76,7 @@ export class Queue {
         this.currentIndex = 0;
     }
 
+    // Remove a song at a specific index
     public removeSong(index: number): Song | undefined {
         if (index >= 0 && index < this.songs.length) {
             return this.songs.splice(index, 1)[0];
