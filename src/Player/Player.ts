@@ -167,12 +167,15 @@ export class Player extends EventEmitter {
         console.log("Playback stopped and queue cleared.");
     }
 
-    public skip(message: Message): void {
+    public skip(message: Message): boolean {
         const guildId = message.guild!.id;
         const queue = this.queues.get(guildId);
-        if (!queue) return;
+        if (!queue) return false;
 
+        const songSkipped = queue.skipSong();
+        if (!songSkipped) return false;
         queue.player?.stop();
+        return true;
     }
 
     public previous(message: Message): boolean {

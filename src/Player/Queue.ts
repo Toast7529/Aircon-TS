@@ -47,11 +47,11 @@ export class Queue {
     }
 
     // Skip to the next song
-    public skipSong(): Song | undefined {
-        if (this.currentIndex + 1 < this.songs.length) {
-            this.currentIndex++;
-            return this.getCurrentSong();
-        }
+    public skipSong(): boolean {
+        if (this.currentIndex >= this.songs.length - 1) return false;
+        this.currentIndex++;
+        this.preventAdvance = true;
+        return true;
     }
 
     public previousSong(): boolean {

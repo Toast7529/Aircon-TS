@@ -15,7 +15,7 @@ export default {
         let queue = client.player.getQueue(message.guild!.id);
         if(!queue) return message.channel.send(`:x: | AirCon isn't on!`);
 
-        await client.player.skip(message);
-        return message.react("👌")
+        let songSkipped = client.player.skip(message);
+        if (songSkipped) return message.react("👌");
     },
 };
