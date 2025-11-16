@@ -27,27 +27,34 @@ export class Player extends EventEmitter {
     }
 
     public async addSongToQueue(guildId: string, query: string, textChannel: TextChannel, member: GuildMember): Promise<void> {
-        const songs = await this.extractSongs(query);
-        if (!songs) throw new Error("No songs could be extracted from the query.");
-        let queue = this.queues.get(guildId);
+        try {
+            const songs = await this.extractSongs(query);
+            if (!songs.length) throw new Error("No songs could be extracted from the query.");
+            let queue = this.queues.get(guildId);
 
-        if (!queue) {
-            if(!member.voice.channel) throw new Error("Member is not in a voice channel.");
-            queue = await this.createQueue(guildId, textChannel, member.voice.channel!, member);
-        }
+            if (!queue) {
+                if(!member.voice.channel) throw new Error("Member is not in a voice channel.");
+                queue = await this.createQueue(guildId, textChannel, member.voice.channel!, member);
+            }
 
-        if (songs.length > 1) {
-            this.emit('playlistAdded', queue, songs);
-        } else {
-            this.emit('songAdded', queue, songs[0]);
-        }
-        
-        for (const song of songs) {
-            queue.addSong(song);
-        }
+            if (songs.length > 1) {
+                this.emit('playlistAdded', queue, songs);
+            } else {
+                this.emit('addSong', queue, songs[0]);
+            }
 
-        if (!queue.player || queue.player.state.status === AudioPlayerStatus.Idle) {
-            await this.play(queue, queue.getCurrentSong()!);
+            for (const song of songs) {
+                queue.addSong(song);
+            }
+
+            if (!queue.player || queue.player.state.status === AudioPlayerStatus.Idle) {
+                await this.play(queue, queue.getCurrentSong()!);
+            }
+
+        } catch (error) {
+            console.log("Error adding song to queue:", error);
+            this.emit('error', error, textChannel);
+            return;
         }
 
     }
@@ -77,7 +84,6 @@ export class Player extends EventEmitter {
 
             const nextSong = queue.getCurrentSong();
             if (nextSong && nextSong.getStream) {
-                this.emit('nextSong', queue, nextSong);
                 await this.play(queue,nextSong);
             } else {
                 this.emit('queueEnd', queue);
@@ -98,6 +104,7 @@ export class Player extends EventEmitter {
         const stream: Readable = await song.getStream();
         const resource = createAudioResource(stream, { inputType: StreamType.Arbitrary });
         queue.player!.play(resource);
+        this.emit('playSong', queue, song);
 
         // Clean up stream:
         queue.player!.once(AudioPlayerStatus.Idle, () => {
@@ -115,19 +122,13 @@ export class Player extends EventEmitter {
         });
     }
 
-    private async extractSongs(query: string): Promise<Song[] | null> {
+    private async extractSongs(query: string): Promise<Song[]> {
         for (const extractor of this.extractors) {
-            try {
-                if (!extractor.validate(query)) continue;
-                const result = await extractor.extract(query);
-                if (result) {
-                    return result;
-                }
-            } catch (err) {
-                console.error(`Error in extractor ${extractor.name}:`, err);
-            }
+            if (!extractor.validate(query)) continue;
+            const result = await extractor.extract(query);
+            if (result) return result;
         }
-        return null;
+        return [];
     }
 
     public isUserInSameVoiceChannel(message: Message): boolean {

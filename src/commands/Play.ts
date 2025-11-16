@@ -16,6 +16,5 @@ export default {
         if (!client.player.isUserInSameVoiceChannel(message)) return message.channel.send(":x: | You are not in my voice channel!");
 
         client.player.addSongToQueue(message.member!.guild.id, query, message.channel as any, message.member!);
-        message.channel.send("Added song to queue!");   
     },
 };

@@ -100,24 +100,43 @@ client.on(Events.MessageCreate, async (message: Message) => {
 });
 
 // Client Player Events:
-client.player.on('songAdded', (queue, song) => {
-    queue.textChannel.send(`🎵 Added to queue: **${song.title}**`);
-});
+client.player.on('error', (error, textChannel) => {
+    let errorEmbed = new EmbedBuilder()
+        .setTitle(`Error encountered: ${error.message}`)
+        .setColor("#ff0000")
+    textChannel.send({embeds: [errorEmbed]});
+})
+.on('playSong', (queue, song) => {
+    let nowPlayingEmbed = new EmbedBuilder()
+        .setDescription(`Now playing [${song.title}](${song.url})`)
+        .setColor(config.color);
 
-client.player.on('playlistAdded', (queue, songs) => {
-    queue.textChannel.send(`🎵 Added playlist with **${songs.length}** songs to the queue!`);
-});
+    queue.textChannel.send({ embeds: [nowPlayingEmbed] })
+        .then((sentMessage: Message) => {
+            setTimeout(() => {
+                sentMessage.delete().catch(() => {});
+            }, 600000);
+        })
+        .catch((err: Error) => console.log(err));
+})
+.on('addSong', (queue, song) => {
+    if (queue.upcoming.length === 0) return;
 
-client.player.on('songEnd', (queue, song) => {
-    console.log(`Finished playing: ${song.title}`);
-});
+    let addedSongEmbed = new EmbedBuilder()
+        .setDescription(`Added [${song.title}](${song.url}) to queue!`)
+        .setColor(config.color);
+    queue.textChannel.send({embeds: [addedSongEmbed]});
+})
+.on('playlistAdded', (queue, songs) => {
+    if (queue.upcoming.length === 0) return;
 
-client.player.on('queueEnd', (queue) => {
-    queue.textChannel.send('🏁 Queue has ended!');
-});
-
-client.player.on('nextSong', (queue, song) => {
-    queue.textChannel.send(`▶ Now playing: **[${song.title}](${song.url})**`);
+    let addedSongEmbed = new EmbedBuilder()
+        .setDescription("Added `" + songs.length + "` to queue")
+        .setColor(config.color);
+    queue.textChannel.send({embeds: [addedSongEmbed]});
+})
+.on('queueEnd', (queue) => {
+    console.log("Queue ended");
 });
 
 client.login(process.env.TOKEN);

@@ -1,8 +1,16 @@
+import { HexColorString } from 'discord.js';
 import 'dotenv/config';
 
-export const config = {
+interface Config {
+  prefix: string;
+  color: HexColorString;
+  authorIconUrl: string;
+  iconUrl: string;
+}
+
+export const config: Config = {
   prefix: '!',
   color: "#130622",
-  authorIcon: "https://avatars.githubusercontent.com/u/64919993?v=4",
-  icon: "https://toastdev.cc/imgs/Aircon.png",
+  authorIconUrl: "https://avatars.githubusercontent.com/u/64919993?v=4",
+  iconUrl: "https://toastdev.cc/imgs/Aircon.png",
 };
