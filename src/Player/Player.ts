@@ -213,4 +213,10 @@ export class Player extends EventEmitter {
         if (!queue) return;
         queue.shuffle();
     }
+
+    public setLoopMode(message: Message, mode: "none" | "single" | "all"): void {
+        const queue = this.queues.get(message.guild!.id);
+        if (!queue) return;
+        queue.setLoopMode(mode);
+    }
 }

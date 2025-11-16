@@ -11,6 +11,7 @@ export class Queue {
     public voiceChannel: VoiceBasedChannel;
     public client: Client;
     public preventAdvance: boolean = false;
+    public loopMode: "none" | "single" | "all" = "none";
 
     // Audio and Voice runtime handlers:
     public connection?: VoiceConnection | null;
@@ -39,7 +40,14 @@ export class Queue {
     }
 
     public moveToHistory(): void {
+        if (this.loopMode === "single") return; // Stay on the current song
+
         const finished = this.upcoming.shift();
+        if (this.loopMode === "all" && finished) {
+            this.upcoming.push(finished);
+            return;
+        }
+
         if (finished) this.history.push(finished);
     }
 
@@ -95,5 +103,9 @@ export class Queue {
             [songsToShuffle[i], songsToShuffle[j]] = [songsToShuffle[j], songsToShuffle[i]];
         }
         this.upcoming = [current, ...songsToShuffle];
+    }
+
+    public setLoopMode(mode: "none" | "single" | "all"): void {
+        this.loopMode = mode;
     }
 }
