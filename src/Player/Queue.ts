@@ -5,20 +5,16 @@ import { Song } from "./Song";
 
 export class Queue {
     // Core
-    public songs: Song[] = [];
+    public upcoming: Song[] = [];
+    public history: Song[] = [];
     public textChannel: TextChannel;
     public voiceChannel: VoiceBasedChannel;
     public client: Client;
     public preventAdvance: boolean = false;
 
     // Audio and Voice runtime handlers:
-    public connection?: VoiceConnection;
-    public player?: AudioPlayer;
-
-    // Playback state:
-    public currentIndex: number = 0;
-    public isPlaying: boolean = false;
-    public isPaused: boolean = false;
+    public connection?: VoiceConnection | null;
+    public player?: AudioPlayer | null;
 
     // Metadata:
     public createdAt: number = Date.now();
@@ -33,55 +29,59 @@ export class Queue {
 
     // Mutators:
     // Add a song to the queue
-    public addSong(song: Song) {
-        this.songs.push(song);
+    public addSong(song: Song): void {
+        this.upcoming.push(song);
     }
 
     // Get the current song
     public getCurrentSong(): Song | undefined {
-        return this.songs[this.currentIndex];
+        return this.upcoming[0];
     }
 
-    public advanceCurrentIndex() {
-        if (this.currentIndex + 1 < this.songs.length) this.currentIndex++;
+    public moveToHistory(): void {
+        const finished = this.upcoming.shift();
+        if (finished) this.history.push(finished);
     }
 
     // Skip to the next song
     public skipSong(): boolean {
-        if (this.currentIndex >= this.songs.length - 1) return false;
-        this.currentIndex++;
+        if (this.upcoming.length <= 1) return false;
+        this.moveToHistory();
         this.preventAdvance = true;
         return true;
     }
 
     public previousSong(): boolean {
-        if (this.currentIndex == 0) return false;
-        this.currentIndex--;
+        const last = this.history.pop();
+        if (!last) return false;
+        
+        const current = this.upcoming.shift();
+        if (current) this.upcoming.unshift(current);
+
+        this.upcoming.unshift(last);
         this.preventAdvance = true;
         return true;
     }
 
     // Clear and destroy the queue
-    public destroyQueue() {
-        this.songs = [];
-        this.currentIndex = 0;
+    public destroyQueue(): void {
+        this.upcoming = [];
+        this.history = [];
         this.player?.stop(true);
     }
 
     // Clear all songs except the current one
-    public clearQueue() {
-        if (this.songs.length > 1) {
-            this.songs = [ this.songs[this.currentIndex] ];
-        }
-        this.currentIndex = 0;
+    public clearQueue(): void {
+        const current = this.getCurrentSong();
+        this.upcoming = current ? [current] : [];
+        this.history = [];
     }
 
     // Remove a song at a specific index
     public removeSong(index: number): Song | undefined {
-        if (index >= 0 && index < this.songs.length) {
-            return this.songs.splice(index, 1)[0];
-        }
+        if (!Number.isInteger(index)) return undefined;
+        if (index <= 0 || index >= this.upcoming.length) return undefined;
+        return this.upcoming.splice(index, 1)[0];
     }
-
 
 }

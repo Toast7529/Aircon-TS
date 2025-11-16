@@ -13,6 +13,7 @@ export default {
         if (!client.player.isUserInSameVoiceChannel(message)) return message.channel.send(":x: | You are not in my voice channel!");
 
         message.channel.send("Check console");   
-        console.log(client.player.getQueue(message.member!.guild.id)?.songs);
+        console.log("Queue for guild:", message.member!.guild.id, client.player.getQueue(message.member!.guild.id)?.upcoming);
+        console.log("History for guild:", message.member!.guild.id, client.player.getQueue(message.member!.guild.id)?.history);
     },
 };

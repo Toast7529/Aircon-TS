@@ -44,10 +44,10 @@ export class Player extends EventEmitter {
         
         for (const song of songs) {
             queue.addSong(song);
+        }
 
-            if (!queue.isPlaying) {
-                await this.play(queue, song);
-            }
+        if (!queue.player || queue.player.state.status === AudioPlayerStatus.Idle) {
+            await this.play(queue, queue.getCurrentSong()!);
         }
 
     }
@@ -72,7 +72,7 @@ export class Player extends EventEmitter {
             if(queue.preventAdvance) {
                 queue.preventAdvance = false;
             } else {
-                queue.advanceCurrentIndex();
+                queue.moveToHistory();
             }
 
             const nextSong = queue.getCurrentSong();
@@ -81,7 +81,6 @@ export class Player extends EventEmitter {
                 await this.play(queue,nextSong);
             } else {
                 this.emit('queueEnd', queue);
-                queue.isPlaying = false;
                 queue.connection?.destroy();
                 this.queues.delete(guildId);
             }
@@ -99,7 +98,6 @@ export class Player extends EventEmitter {
         const stream: Readable = await song.getStream();
         const resource = createAudioResource(stream, { inputType: StreamType.Arbitrary });
         queue.player!.play(resource);
-        queue.isPlaying = true;
 
         // Clean up stream:
         queue.player!.once(AudioPlayerStatus.Idle, () => {
@@ -108,7 +106,7 @@ export class Player extends EventEmitter {
         });
     }
 
-    private setupEventListeners(queue: Queue): void {       // Why is it doing it 3 times?? (I disconnected twice)
+    private setupEventListeners(queue: Queue): void {
         queue.connection!.on(VoiceConnectionStatus.Disconnected, () => {
             queue.player?.stop();
             this.queues.delete(queue.voiceChannel.guild.id);
@@ -168,30 +166,25 @@ export class Player extends EventEmitter {
     }
 
     public skip(message: Message): boolean {
-        const guildId = message.guild!.id;
-        const queue = this.queues.get(guildId);
+        const queue = this.queues.get(message.guild!.id);
         if (!queue) return false;
 
-        const songSkipped = queue.skipSong();
-        if (!songSkipped) return false;
+        if (!queue.skipSong()) return false;
         queue.player?.stop();
         return true;
     }
 
     public previous(message: Message): boolean {
-        const guildId = message.guild!.id;
-        const queue = this.queues.get(guildId);
+        const queue = this.queues.get(message.guild!.id);
         if (!queue) return false;
 
-        const previousSong = queue.previousSong();
-        if (!previousSong) return false;
+        if (!queue.previousSong()) return false;
         queue.player?.stop();
         return true;
     }
 
     public pause(message: Message): boolean {
-        const guildId = message.guild!.id;
-        const queue = this.queues.get(guildId);
+        const queue = this.queues.get(message.guild!.id);
         if (!queue) return false;
 
         if (queue.player?.state.status !== AudioPlayerStatus.Playing) return false;
@@ -200,8 +193,7 @@ export class Player extends EventEmitter {
     }
 
     public resume(message: Message): boolean {
-        const guildId = message.guild!.id;
-        const queue = this.queues.get(guildId);
+        const queue = this.queues.get(message.guild!.id);
         if (!queue) return false;
 
         if (queue.player?.state.status !== AudioPlayerStatus.Paused) return false;
@@ -210,8 +202,7 @@ export class Player extends EventEmitter {
     }
 
     public clear(message: Message): void {
-        const guildId = message.guild!.id;
-        const queue = this.queues.get(guildId);
+        const queue = this.queues.get(message.guild!.id);
         if (!queue) return;
 
         queue.clearQueue();
