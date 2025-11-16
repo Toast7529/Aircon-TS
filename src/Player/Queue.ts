@@ -84,4 +84,16 @@ export class Queue {
         return this.upcoming.splice(index, 1)[0];
     }
 
+    public shuffle(): void {
+        if (this.upcoming.length <= 2) return;  // No need to shuffle
+
+        const current = this.upcoming[0];
+        const songsToShuffle = this.upcoming.slice(1);
+
+        for (let i = songsToShuffle.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [songsToShuffle[i], songsToShuffle[j]] = [songsToShuffle[j], songsToShuffle[i]];
+        }
+        this.upcoming = [current, ...songsToShuffle];
+    }
 }

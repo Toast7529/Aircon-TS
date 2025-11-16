@@ -207,4 +207,10 @@ export class Player extends EventEmitter {
 
         queue.clearQueue();
     }
+
+    public shuffle(message: Message): void {
+        const queue = this.queues.get(message.guild!.id);
+        if (!queue) return;
+        queue.shuffle();
+    }
 }
