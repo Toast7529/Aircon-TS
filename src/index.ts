@@ -1,12 +1,13 @@
 import 'dotenv/config';
-import { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, Message, TextBasedChannel } from 'discord.js';
+import { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, Message, TextBasedChannel, TextChannel } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
 import { config } from './config'
 import { pathToFileURL } from 'url';
 import { Player } from './Player/Player';
 import { MP3Extractor } from "./Player/extractors/MP3Extractor";
-
+import { Queue } from './Player/Queue';
+import { Song } from './Player/Song';
 // Client Set up:
 const client = new Client({
     intents: [
@@ -22,14 +23,6 @@ interface Command {
     data: { name: string };
     alias?: string;
     execute: (client: Client, message: Message & { channel: TextBasedChannel }, args: string[]) => void;
-}
-
-declare module 'discord.js' {
-    export interface Client {
-        commands: Collection<string, Command>;
-        aliases: Collection<string, Command>;
-        player: Player;
-    }
 }
 
 // Initialize Player
@@ -100,13 +93,13 @@ client.on(Events.MessageCreate, async (message: Message) => {
 });
 
 // Client Player Events:
-client.player.on('error', (error, textChannel) => {
+client.player.on('error', (error: Error, textChannel: TextChannel) => {
     let errorEmbed = new EmbedBuilder()
         .setTitle(`Error encountered: ${error.message}`)
         .setColor("#ff0000")
     textChannel.send({embeds: [errorEmbed]});
 })
-.on('playSong', (queue, song) => {
+.on('playSong', (queue: Queue, song: Song) => {
     let nowPlayingEmbed = new EmbedBuilder()
         .setDescription(`Now playing [${song.title}](${song.url})`)
         .setColor(config.color);
@@ -119,7 +112,7 @@ client.player.on('error', (error, textChannel) => {
         })
         .catch((err: Error) => console.log(err));
 })
-.on('addSong', (queue, song) => {
+.on('addSong', (queue: Queue, song: Song) => {
     if (queue.upcoming.length === 0) return;
 
     let addedSongEmbed = new EmbedBuilder()
@@ -127,7 +120,7 @@ client.player.on('error', (error, textChannel) => {
         .setColor(config.color);
     queue.textChannel.send({embeds: [addedSongEmbed]});
 })
-.on('playlistAdded', (queue, songs) => {
+.on('playlistAdded', (queue: Queue, songs: Song[]) => {
     if (queue.upcoming.length === 0) return;
 
     let addedSongEmbed = new EmbedBuilder()
@@ -135,8 +128,18 @@ client.player.on('error', (error, textChannel) => {
         .setColor(config.color);
     queue.textChannel.send({embeds: [addedSongEmbed]});
 })
-.on('queueEnd', (queue) => {
+.on('finish', async (queue: Queue) => {
     console.log("Queue ended");
+    await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds
+    if (queue.getCurrentSong()) return; // A song was added during the wait
+    client.player.destroyQueue(queue.voiceChannel.guild.id);
+})
+.on('channelEmpty', (queue: Queue) => {
+    setTimeout(() => {
+        if (queue.voiceChannel.members.filter(m => !m.user.bot).size === 0) {
+            client.player.destroyQueue(queue.voiceChannel.guild.id);
+        }
+    }, 30000); // 30 seconds
 });
 
 client.login(process.env.TOKEN);

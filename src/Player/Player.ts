@@ -20,6 +20,45 @@ export class Player extends EventEmitter {
         this.queues = new Collection();
         this.client = client;
         this.extractors = options.extractors;
+
+        this.setupGlobalVoiceListeners();
+    }
+
+    private setupGlobalVoiceListeners(): void {
+        if (this.client.__playerVoiceListenersAttached) return;
+        this.client.__playerVoiceListenersAttached = true;
+
+        this.client.on('voiceStateUpdate', (oldState, newState) => {
+            const guildId = newState.guild.id;
+            const queue = this.queues.get(guildId);
+            if (!queue) return;
+
+            const botId = this.client.user!.id;
+            const isBot = newState.id === botId;
+
+            // Bot moved to a different voice channel:
+            if (isBot && oldState.channelId !== newState.channelId) {
+
+                // Bot disconnected entirely
+                if (!newState.channelId) {
+                    this.destroyQueue(guildId);
+                    return;
+                }
+
+                // Bot moved to a different voice channel:
+                const newChannel = newState.guild.channels.cache.get(newState.channelId) as VoiceBasedChannel;
+                if (newChannel) queue.voiceChannel = newChannel;
+            }
+
+            // Check if bot is alone (ignore other bots):
+            const botChannel = queue.voiceChannel;
+            if (!botChannel) return;
+
+            const nonBotMembers = botChannel.members.filter(member => !member.user.bot);
+            if (nonBotMembers.size === 0) {
+                this.emit("channelEmpty", queue);
+            }
+        });
     }
 
     public getQueue(guildId: string): Queue | undefined {
@@ -54,9 +93,7 @@ export class Player extends EventEmitter {
         } catch (error) {
             console.log("Error adding song to queue:", error);
             this.emit('error', error, textChannel);
-            return;
         }
-
     }
 
     public async createQueue(guildId: string, textChannel: TextChannel, voiceChannel: VoiceBasedChannel, member?: GuildMember): Promise<Queue> {
@@ -86,13 +123,9 @@ export class Player extends EventEmitter {
             if (nextSong && nextSong.getStream) {
                 await this.play(queue,nextSong);
             } else {
-                this.emit('queueEnd', queue);
-                queue.connection?.destroy();
-                this.queues.delete(guildId);
+                this.emit('finish', queue);     // Destroy queue when event is listened to
             }
         });
-
-        this.setupEventListeners(queue);
 
         this.queues.set(guildId, queue);
         return queue;
@@ -113,13 +146,14 @@ export class Player extends EventEmitter {
         });
     }
 
-    private setupEventListeners(queue: Queue): void {
-        queue.connection!.on(VoiceConnectionStatus.Disconnected, () => {
-            queue.player?.stop();
-            this.queues.delete(queue.voiceChannel.guild.id);
-            queue.connection?.destroy(); 
-            console.log("Voice connection destroyed. Queue cleaned up.");
-        });
+    public destroyQueue(guildId: string): void {
+        const queue = this.queues.get(guildId);
+        if (!queue) return;
+
+        queue.player?.stop();
+        this.queues.delete(queue.voiceChannel.guild.id);
+        queue.connection?.destroy();
+        console.log("Voice connection destroyed. Queue cleaned up.");
     }
 
     private async extractSongs(query: string): Promise<Song[]> {
