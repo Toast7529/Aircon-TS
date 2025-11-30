@@ -40,7 +40,7 @@ export class Queue {
     }
 
     public moveToHistory(): void {
-        if (this.loopMode === "single") return; // Stay on the current song
+        if (this.loopMode === "single") return;     // Stay on the current song
 
         const finished = this.upcoming.shift();
         if (this.loopMode === "all" && finished) {
