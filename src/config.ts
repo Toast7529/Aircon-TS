@@ -1,5 +1,4 @@
 import { HexColorString } from 'discord.js';
-import 'dotenv/config';
 
 interface Config {
   prefix: string;

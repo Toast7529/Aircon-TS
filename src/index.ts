@@ -2,12 +2,12 @@ import 'dotenv/config';
 import { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, Message, TextBasedChannel, TextChannel } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
-import { config } from './config'
-import { pathToFileURL } from 'url';
-import { Player } from './Player/Player';
-import { MP3Extractor } from "./Player/extractors/MP3Extractor";
-import { Queue } from './Player/Queue';
-import { Song } from './Player/Song';
+import { config } from './config.js'
+import { fileURLToPath, pathToFileURL } from 'url';
+import { Player } from './Player/Player.js';
+import { MP3Extractor } from "./Player/extractors/MP3Extractor.js";
+import { Queue } from './Player/Queue.js';
+import { Song } from './Player/Song.js';
 // Client Set up:
 const client = new Client({
     intents: [
@@ -36,6 +36,9 @@ client.player = new Player(client, {
 // Command Collection:
 client.commands = new Collection<string, Command>();
 client.aliases = new Collection<string, Command>();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 // Load Command Files:

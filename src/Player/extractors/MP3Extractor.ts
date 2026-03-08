@@ -1,5 +1,5 @@
-import { BaseExtractor } from "./BaseExtractor";
-import { Song } from "../Song";
+import { BaseExtractor } from "./BaseExtractor.js";
+import { Song } from "../Song.js";
 import { Readable } from "stream";
 import https from "https";
 

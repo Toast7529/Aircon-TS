@@ -1,7 +1,7 @@
-import { ActionRowBuilder, ButtonBuilder, ContainerBuilder, EmbedBuilder, SlashCommandBuilder } from '@discordjs/builders';
+import { ActionRowBuilder, ButtonBuilder, ContainerBuilder, SlashCommandBuilder } from '@discordjs/builders';
 import { ButtonStyle, Client, ComponentType, Message, MessageFlags } from 'discord.js';
-import { Song } from '../Player/Song';
-import { Queue } from '../Player/Queue';
+import { Song } from '../Player/Song.js';
+import { Queue } from '../Player/Queue.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -26,10 +26,6 @@ export default {
         const generateEmbed = (page: number) => {
             const start = page * perPage;
             const pageSongs = queue.upcoming.slice(start, start + perPage);
-
-            // const embed = new EmbedBuilder()
-            //     .setTitle(`Queue - Page ${currentPage + 1} of ${totalPages}`)
-            //     .setDescription(pageSongs.map((song: Song, index: number) => `${start + index + 1}. ${song.title}`).join('\n') || 'No songs in the queue.')
 
             const container = new ContainerBuilder()
             

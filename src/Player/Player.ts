@@ -1,10 +1,10 @@
 import { Client, Collection, GuildMember, TextChannel, VoiceBasedChannel, Message } from 'discord.js';
 import { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, VoiceConnectionStatus, entersState, StreamType, getVoiceConnection} from "@discordjs/voice";
-import { Queue } from './Queue';
-import { Song } from './Song';
+import { Queue } from './Queue.js';
+import { Song } from './Song.js';
 import { Readable } from 'stream';
 import { EventEmitter } from 'events';
-import { BaseExtractor } from './extractors/BaseExtractor';
+import { BaseExtractor } from './extractors/BaseExtractor.js';
 
 export interface PlayerOptions {
     extractors: BaseExtractor[];
@@ -252,5 +252,11 @@ export class Player extends EventEmitter {
         const queue = this.queues.get(message.guild!.id);
         if (!queue) return;
         queue.setLoopMode(mode);
+    }
+
+    public remove(message: Message, index: number): Song | undefined {
+        const queue = this.queues.get(message.guild!.id);
+        if (!queue) return undefined;
+        return queue.removeSong(index);
     }
 }

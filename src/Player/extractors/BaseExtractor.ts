@@ -1,5 +1,4 @@
-import { Song } from "../Song";
-import { Readable } from "stream";
+import { Song } from "../Song.js";
 
 export abstract class BaseExtractor {
     abstract readonly name: string;

@@ -1,6 +1,6 @@
 import type { Client, GuildMember, TextChannel, VoiceBasedChannel } from "discord.js";
 import type { VoiceConnection, AudioPlayer } from "@discordjs/voice";
-import { Song } from "./Song";
+import { Song } from "./Song.js";
 
 
 export class Queue {
