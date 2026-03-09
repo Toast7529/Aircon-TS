@@ -17,7 +17,6 @@ export default {
         let queue: Queue = client.player.getQueue(message.guild!.id);
         if(!queue) return message.channel.send(`:x: | AirCon isn't on!`);
 
-        console.log(queue.upcoming[0]);
         const perPage = 10;
         const total = queue.upcoming.length;
         const totalPages = Math.ceil(total / perPage);
