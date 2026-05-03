@@ -83,6 +83,7 @@ export class Player extends EventEmitter {
             }
 
             for (const song of songs) {
+                if (!song.requestedBy) song.requestedBy = member;
                 queue.addSong(song);
             }
 
