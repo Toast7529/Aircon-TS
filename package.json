@@ -1,5 +1,5 @@
 {
-  "name": "aircon-2025",
+  "name": "aircon-ts",
   "version": "1.0.0",
   "type": "module",
   "description": "A complete rewrite of Aircon the music bot (in typescript)",
@@ -11,15 +11,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Toast7529/Aircon-2025.git"
+    "url": "git+https://github.com/Toast7529/Aircon-TS.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Toast7529/Aircon-2025/issues"
+    "url": "https://github.com/Toast7529/Aircon-TS/issues"
   },
-  "homepage": "https://github.com/Toast7529/Aircon-2025#readme",
+  "homepage": "https://github.com/Toast7529/Aircon-TS#readme",
   "devDependencies": {
     "@types/node": "^24.9.2",
     "tsx": "^4.20.6",
