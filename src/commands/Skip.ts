@@ -16,6 +16,7 @@ export default {
         if(!queue) return message.channel.send(`:x: | AirCon isn't on!`);
 
         let songSkipped = client.player.skip(message);
-        if (songSkipped) return message.react("👌");
+        if (!songSkipped) return message.channel.send(":x: | There is no next song in the queue!");
+        message.react("👌");
     },
 };

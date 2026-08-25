@@ -2,6 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ContainerBuilder, SlashCommandBuilder 
 import { ButtonStyle, Client, ComponentType, Message, MessageFlags } from 'discord.js';
 import { Song } from '../Player/Song.js';
 import { Queue } from '../Player/Queue.js';
+import { config } from '../config.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -30,7 +31,7 @@ export default {
             
                 .addSectionComponents((section) =>
                     section.addTextDisplayComponents((textDisplay) => textDisplay.setContent(`## Queue for ${message.guild?.name}`))
-                    .setThumbnailAccessory((thumbnail) => thumbnail.setURL(queue.upcoming[0].thumbnailUrl || ''))
+                    .setThumbnailAccessory((thumbnail) => thumbnail.setURL(queue.upcoming[0].thumbnailUrl || config.iconUrl))
                 )
             
                 .addSeparatorComponents((separator) => separator)

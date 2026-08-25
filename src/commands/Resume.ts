@@ -4,7 +4,7 @@ import { Client, Message } from 'discord.js';
 export default {
     data: new SlashCommandBuilder()
         .setName("resume")
-        .setDescription("Pauses the current song!"),
+        .setDescription("Resumes the current song!"),
     alias: "",
     async execute(client: Client, message: Message, args: string[]) {
         if (!message.channel.isSendable()) return;

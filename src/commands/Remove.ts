@@ -15,8 +15,8 @@ export default {
         let queue = client.player.getQueue(message.guild!.id);
         if(!queue) return message.channel.send(`:x: | AirCon isn't on!`);
 
-        if (Number.isInteger(args[0])) return message.channel.send(':x: | Please use a number!')
-        if (args[0] > queue.upcoming.length || parseInt(args[0]) <= 1) return message.channel.send(`Please choose a number in the queue!`)  // NOT BEING EXECUTED
+        if (Number.isInteger(args[0])) return message.channel.send(':x: | Please use a number!');
+        if (args[0] > queue.upcoming.length || parseInt(args[0]) <= 1) return message.channel.send(`Please choose a number in the queue!`);
 
         const removedSong = client.player.remove(message, parseInt(args[0]) - 1);
         if (!removedSong) return message.channel.send(`:x: | Could not remove the song!`);
