@@ -6,15 +6,32 @@ import { Readable } from 'stream';
 import { EventEmitter } from 'events';
 import { BaseExtractor } from './extractors/BaseExtractor.js';
 
+/**
+ * Options used to configure a Player instance.
+ */
 export interface PlayerOptions {
     extractors: BaseExtractor[];
 }
 
+/**
+ * Coordinates queue state, source extraction, and voice playback.
+ *
+ * Related types:
+ * - {@link Queue}
+ * - {@link Song}
+ * - {@link BaseExtractor}
+ */
 export class Player extends EventEmitter {
     private queues: Collection<string, Queue>;
     private extractors: BaseExtractor[];
     private client: Client;
 
+    /**
+     * Creates a new player and attaches global voice listeners once per client.
+     *
+     * @param client - Discord client used for event wiring.
+     * @param options - Player configuration.
+     */
     constructor(client: Client, options: PlayerOptions) {
         super();
         this.queues = new Collection();
@@ -61,10 +78,24 @@ export class Player extends EventEmitter {
         });
     }
 
+    /**
+     * Gets the queue for a guild.
+     *
+     * @param guildId - Target guild ID.
+     * @returns The queue for the guild, or undefined if none exists.
+     */
     public getQueue(guildId: string): Queue | undefined {
         return this.queues.get(guildId);
     }
 
+    /**
+     * Extracts songs from a query and adds them to the target guild queue.
+     *
+     * @param guildId - Target guild ID.
+     * @param query - Search text or source URL.
+     * @param textChannel - Channel used for error and playback messages.
+     * @param member - Member requesting playback.
+     */
     public async addSongToQueue(guildId: string, query: string, textChannel: TextChannel, member: GuildMember): Promise<void> {
         try {
             const songs = await this.extractSongs(query);
@@ -97,6 +128,15 @@ export class Player extends EventEmitter {
         }
     }
 
+    /**
+     * Creates a queue and joins the requested voice channel.
+     *
+     * @param guildId - Target guild ID.
+     * @param textChannel - Channel used for playback messages.
+     * @param voiceChannel - Voice channel to join.
+     * @param member - Optional requesting member.
+     * @returns A ready queue bound to the voice connection.
+     */
     public async createQueue(guildId: string, textChannel: TextChannel, voiceChannel: VoiceBasedChannel, member?: GuildMember): Promise<Queue> {
         const connection = joinVoiceChannel({
             channelId: voiceChannel.id,
@@ -132,6 +172,12 @@ export class Player extends EventEmitter {
         return queue;
     }
 
+    /**
+     * Starts playback for a single song.
+     *
+     * @param queue - Target queue.
+     * @param song - Song to play.
+     */
     private async play(queue: Queue, song: Song): Promise<void> {
         if (!song.getStream) throw new Error("Song does not have a stream generator.");
 
@@ -147,6 +193,11 @@ export class Player extends EventEmitter {
         });
     }
 
+    /**
+     * Destroys and removes a queue for a guild.
+     *
+     * @param guildId - Target guild ID.
+     */
     public destroyQueue(guildId: string): void {
         const queue = this.queues.get(guildId);
         if (!queue) return;
@@ -157,6 +208,12 @@ export class Player extends EventEmitter {
         console.log("Voice connection destroyed. Queue cleaned up.");
     }
 
+    /**
+     * Finds the first extractor that accepts the query and returns songs.
+     *
+     * @param query - Search text or source URL.
+     * @returns A list of extracted songs, or an empty array if none match.
+     */
     private async extractSongs(query: string): Promise<Song[]> {
         for (const extractor of this.extractors) {
             if (!extractor.validate(query)) continue;
@@ -166,6 +223,13 @@ export class Player extends EventEmitter {
         return [];
     }
 
+    /**
+     * Checks whether the command author is in the same voice channel as the bot.
+     * Returns true if the bot has no active connection yet.
+     *
+     * @param message - Command message.
+     * @returns True when the user and bot share a voice channel, or the bot has no connection.
+     */
     public isUserInSameVoiceChannel(message: Message): boolean {
         const userChannel = message.member?.voice.channel;
         if (!userChannel) return false;
@@ -176,6 +240,12 @@ export class Player extends EventEmitter {
         return connection.joinConfig.channelId === userChannel.id;
     }
     
+    /**
+     * Returns playback duration in seconds for the active resource.
+     *
+     * @param guildId - Target guild ID.
+     * @returns Current playback duration in seconds.
+     */
     public getCurrentDuration(guildId: string): number {
         const queue = this.queues.get(guildId);
         if (!queue) return 0;
@@ -190,6 +260,11 @@ export class Player extends EventEmitter {
         return resource.playbackDuration / 1000; // Convert to seconds
     }
 
+    /**
+     * Stops playback and clears the queue for the current guild.
+     *
+     * @param message - Command message.
+     */
     public stop(message: Message): void {
         const guildId = message.guild!.id;
         const queue = this.queues.get(guildId);
@@ -200,6 +275,12 @@ export class Player extends EventEmitter {
         console.log("Playback stopped and queue cleared.");
     }
 
+    /**
+     * Skips the current song if a next song exists.
+     *
+     * @param message - Command message.
+     * @returns True when the skip succeeds.
+     */
     public skip(message: Message): boolean {
         const queue = this.queues.get(message.guild!.id);
         if (!queue) return false;
@@ -209,6 +290,12 @@ export class Player extends EventEmitter {
         return true;
     }
 
+    /**
+     * Plays the previous song if one exists in history.
+     *
+     * @param message - Command message.
+     * @returns True when the previous song is restored.
+     */
     public previous(message: Message): boolean {
         const queue = this.queues.get(message.guild!.id);
         if (!queue) return false;
@@ -218,6 +305,12 @@ export class Player extends EventEmitter {
         return true;
     }
 
+    /**
+     * Pauses playback for the current guild.
+     *
+     * @param message - Command message.
+     * @returns True when playback is paused.
+     */
     public pause(message: Message): boolean {
         const queue = this.queues.get(message.guild!.id);
         if (!queue) return false;
@@ -227,6 +320,12 @@ export class Player extends EventEmitter {
         return true;
     }
 
+    /**
+     * Resumes playback for the current guild.
+     *
+     * @param message - Command message.
+     * @returns True when playback is resumed.
+     */
     public resume(message: Message): boolean {
         const queue = this.queues.get(message.guild!.id);
         if (!queue) return false;
@@ -236,6 +335,11 @@ export class Player extends EventEmitter {
         return true;
     }
 
+    /**
+     * Clears the upcoming queue while keeping the current song.
+     *
+     * @param message - Command message.
+     */
     public clear(message: Message): void {
         const queue = this.queues.get(message.guild!.id);
         if (!queue) return;
@@ -243,18 +347,36 @@ export class Player extends EventEmitter {
         queue.clearQueue();
     }
 
+    /**
+     * Shuffles all queued songs except the current one.
+     *
+     * @param message - Command message.
+     */
     public shuffle(message: Message): void {
         const queue = this.queues.get(message.guild!.id);
         if (!queue) return;
         queue.shuffle();
     }
 
+    /**
+     * Updates the loop mode for the current guild queue.
+     *
+     * @param message - Command message.
+     * @param mode - Loop mode to set.
+     */
     public setLoopMode(message: Message, mode: "none" | "single" | "all"): void {
         const queue = this.queues.get(message.guild!.id);
         if (!queue) return;
         queue.setLoopMode(mode);
     }
 
+    /**
+     * Removes a song from the current guild queue by index.
+     *
+     * @param message - Command message.
+     * @param index - Zero-based song index.
+     * @returns The removed song, or undefined if nothing was removed.
+     */
     public remove(message: Message, index: number): Song | undefined {
         const queue = this.queues.get(message.guild!.id);
         if (!queue) return undefined;
