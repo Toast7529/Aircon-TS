@@ -2,39 +2,26 @@
 
 A Discord music bot with a queue engine and audio player written from scratch in TypeScript.
 
-<!-- Suggested image: the Now Playing panel — it's the most visually striking part of the bot
-     and the best possible first impression. Crop tight to the embed. -->
 ![Now Playing panel](docs/images/now-playing.png)
 
 ---
 
 ## About
 
-Aircon started life as a JavaScript bot. This is a complete rewrite, I used the project to learn
-TypeScript properly, which meant rebuilding it rather than porting it.
+Aircon began as a JavaScript bot; this is a complete TypeScript rewrite.
 
-The interesting consequence of that goal: **I wrote the player myself** instead of pulling in
-`distube` or a similar library. Queue management, loop modes, history, voice connection
-lifecycle, and stream handling are all implemented here. Using a library would have meant learning
-its API rather than learning the language and the underlying `@discordjs/voice` primitives, which
-was the whole point.
-
-The other design decision worth calling out is **modular extractors** — audio sources are plugins
-behind a common interface, so adding a new one never means touching the player. More on that below.
+It uses a custom player built on `@discordjs/voice` that handles queues, loop modes, history, and
+voice connections. Audio sources are provided by extractors implementing a shared interface, so
+adding a new source just means writing a new extractor.
 
 ---
 
 ## Screenshots
 
-<!-- Suggested image: the paginated queue embed, ideally with 6+ songs so the pagination
-     buttons look meaningful. -->
 | Queue | Loop controls |
 |---|---|
 | ![Queue](docs/images/queue.png) | ![Loop](docs/images/loop.png) |
 
-<!-- Suggested image: optional — a short GIF of pressing skip on the Now Playing panel and the
-     embed updating in place. GIFs of interactive components are disproportionately convincing.
-     Record with ScreenToGif or similar, keep it under ~5 seconds. -->
 
 ---
 
@@ -79,31 +66,29 @@ src/
 ├── index.ts              Client setup, command loader, event wiring
 ├── config.ts             Prefix, embed colour, icons
 ├── Player/
-│   ├── Player.ts         Orchestrator — owns all queues, runs extractors, controls playback
+│   ├── Player.ts         Owns the queues, runs extractors, controls playback
 │   ├── Queue.ts          Per-guild state: current track, upcoming, history, loop mode
 │   ├── Song.ts           Track model with a stream generator
 │   └── extractors/
-│       ├── BaseExtractor.ts   Abstract contract every source implements
+│       ├── BaseExtractor.ts   Base class every source extends
 │       └── MP3Extractor.ts    Direct MP3 URL support
 ├── commands/             One file per command, loaded dynamically at startup
 └── utils/                Shared formatting helpers
 ```
 
-**`Player`** extends `EventEmitter` and owns a `Collection<guildId, Queue>`. It never talks to
-Discord directly — it emits (`playSong`, `addSong`, `finish`, `channelEmpty`, `error`) and
-`index.ts` decides what to render. That separation means playback logic can change without touching
-the messaging layer, and vice versa.
+`Player` extends `EventEmitter` and keeps a `Collection<guildId, Queue>`. It doesn't send anything
+to Discord itself — it emits `playSong`, `addSong`, `finish`, `channelEmpty` and `error`, and
+`index.ts` handles the replies.
 
-**`Queue`** holds everything scoped to a single guild. Because state is per-guild rather than
-global, the bot can play different tracks in different servers simultaneously without any shared
-mutable state between them.
+`Queue` holds the state for one guild, so servers don't share anything and can play different
+tracks at the same time.
 
-**Commands** are dropped into `src/commands/` and picked up automatically — no registration step,
-no central import list.
+Commands are just files in `src/commands/` — drop one in and it gets loaded on startup, no
+registration needed.
 
 ### Writing an extractor
 
-Every audio source implements the same two-method contract:
+Every source extends `BaseExtractor`:
 
 ```ts
 export abstract class BaseExtractor {
@@ -113,9 +98,9 @@ export abstract class BaseExtractor {
 }
 ```
 
-`Player` walks its extractor list, uses the first one whose `validate()` accepts the query, and
-plays whatever `Song` objects come back. Adding a new source means writing one class and adding it
-to the list in `index.ts` — the player itself never changes.
+`Player` goes through its extractor list, takes the first one whose `validate()` returns true, and
+plays the `Song` objects it gets back. To add a source, write the class and add it to the list in
+`index.ts`.
 
 ```ts
 client.player = new Player(client, {
